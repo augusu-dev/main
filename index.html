@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>東京都 市区町村別 平均賃貸マップ</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #141b34;
+        --text: #e8eeff;
+        --muted: #9dadde;
+        --accent: #4ec3ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--text);
+        background: radial-gradient(circle at top, #1b2752, #070b18 45%, #05070f);
+        font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        min-height: 100vh;
+      }
+      .main { padding: 16px 16px 24px; }
+      h1 { margin: 0 0 8px; font-size: 1.5rem; }
+      .sub { margin: 0 0 14px; color: var(--muted); }
+      .legend {
+        display: flex; gap: 8px; align-items: center; margin-bottom: 10px;
+        color: var(--muted); font-size: 0.9rem;
+      }
+      .gradient { width: 240px; height: 14px; border-radius: 8px;
+        background: linear-gradient(90deg,#2356a8,#3f9be0,#57d29d,#e3d25a,#e55f5f); }
+      svg {
+        width: 100%;
+        height: calc(100vh - 130px);
+        min-height: 620px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #0e1530, #0a1025);
+        box-shadow: inset 0 0 0 1px #24345f;
+      }
+      .tile {
+        stroke: rgba(255,255,255,0.35);
+        stroke-width: 1;
+        rx: 8;
+        cursor: pointer;
+        transition: transform .12s ease, filter .12s ease;
+      }
+      .tile:hover { transform: translateY(-2px); filter: brightness(1.12); }
+      .label {
+        pointer-events: none;
+        font-size: 12px;
+        fill: #f7f9ff;
+        text-anchor: middle;
+      }
+      aside {
+        border-left: 1px solid #20325f;
+        background: rgba(7,11,27,0.9);
+        backdrop-filter: blur(6px);
+        padding: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid #223766;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+      .scroll {
+        overflow: auto;
+        flex: 1;
+        border-radius: 10px;
+        border: 1px solid #24345f;
+        background: #0f1733;
+        padding: 12px;
+      }
+      .row { display: flex; justify-content: space-between; margin: 6px 0; gap: 8px; }
+      .muted { color: var(--muted); }
+      .top5 li { margin-bottom: 4px; }
+      @media (max-width: 980px) {
+        .layout { grid-template-columns: 1fr; }
+        aside { border-left: 0; border-top: 1px solid #20325f; min-height: 45vh; }
+        svg { height: 65vh; min-height: 480px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <section class="main">
+        <h1>東京都 市区町村別 平均賃貸マップ（タイル型）</h1>
+        <p class="sub">色が濃いほど平均賃料が高いエリアです。タイルにカーソルを乗せると右側に詳細が表示されます。</p>
+        <div class="legend">
+          <span>平均賃料（1K/1DK想定）</span>
+          <div class="gradient"></div>
+          <span>7万円</span><span>→</span><span>17万円</span>
+        </div>
+        <svg id="map" viewBox="0 0 1320 920" aria-label="東京都市区町村マップ"></svg>
+      </section>
+      <aside>
+        <div class="card">
+          <strong id="selName">エリアを選択</strong>
+          <div class="muted" id="selType">市区町村</div>
+        </div>
+        <div class="scroll" id="details">
+          マップ上の市区町村にカーソルを合わせると、ランキング、地域紹介、人口などを表示します。
+        </div>
+      </aside>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+        }
+      }
+    </script>
+
+    <script type="module">
+      const areas = [
+        // 23 wards
+        ["千代田区","特別区",165000,68000,"官公庁とオフィスが集まり交通利便性が非常に高い。",7,96,12,8,2],
+        ["港区","特別区",172000,266000,"高級住宅地とビジネス街が共存し、都心アクセスが抜群。",9,95,10,9,2],
+        ["中央区","特別区",158000,177000,"再開発が進む湾岸エリアと伝統商業地が混在。",8,94,11,10,2],
+        ["新宿区","特別区",145000,349000,"商業・行政・住宅が揃う東京のハブ。",8,93,13,7,3],
+        ["渋谷区","特別区",162000,240000,"カルチャーとIT企業が集積する人気エリア。",8,94,14,6,3],
+        ["文京区","特別区",132000,243000,"教育機関と落ち着いた住宅街が多い。",7,90,13,8,4],
+        ["台東区","特別区",124000,214000,"浅草・上野を中心に観光と下町文化が息づく。",6,89,15,9,4],
+        ["墨田区","特別区",118000,284000,"東京スカイツリー周辺の開発で住環境が向上。",6,88,14,10,4],
+        ["江東区","特別区",126000,539000,"湾岸の大規模住宅と豊かな公園が魅力。",7,89,12,11,4],
+        ["品川区","特別区",138000,413000,"新幹線・空港アクセスに優れた交通要衝。",7,91,12,9,3],
+        ["目黒区","特別区",148000,286000,"閑静な住宅街と都心近接を両立。",8,92,11,8,3],
+        ["大田区","特別区",121000,744000,"羽田空港を擁し、住宅地の選択肢が広い。",6,87,16,7,4],
+        ["世田谷区","特別区",136000,923000,"人口最大規模で住宅地ブランドが高い。",7,90,15,6,4],
+        ["中野区","特別区",129000,344000,"都心近接で若年層に人気の住宅エリア。",7,90,13,7,3],
+        ["杉並区","特別区",123000,584000,"中央線沿線を中心に住みやすさで人気。",6,88,15,6,4],
+        ["豊島区","特別区",131000,292000,"池袋を核に商業利便性が高い。",7,90,12,8,3],
+        ["北区","特別区",113000,357000,"JR路線が多く都心アクセスの割に家賃が抑えめ。",6,86,14,9,4],
+        ["荒川区","特別区",109000,221000,"下町らしさと交通利便が両立した密集住宅地。",5,85,16,10,4],
+        ["板橋区","特別区",108000,584000,"住宅地が広く、ファミリー層に根強い人気。",5,85,17,8,5],
+        ["練馬区","特別区",106000,752000,"緑が多く、広い住宅地が特徴。",5,84,19,7,5],
+        ["足立区","特別区",101000,695000,"家賃水準が比較的低く生活コストを抑えやすい。",5,82,18,9,5],
+        ["葛飾区","特別区",98000,463000,"下町文化が色濃く、穏やかな住宅地が多い。",4,81,20,10,5],
+        ["江戸川区","特別区",99000,700000,"公園や河川が多く子育て世帯に人気。",4,82,21,11,5],
+        // cities west
+        ["武蔵野市","市",122000,151000,"吉祥寺を中心に高い生活利便性を持つ。",7,90,17,5,6],
+        ["三鷹市","市",116000,196000,"文教・住宅都市として安定した人気。",6,88,18,6,6],
+        ["調布市","市",110000,238000,"都心アクセスと落ち着いた街並みのバランスが良い。",6,86,19,7,6],
+        ["狛江市","市",108000,83000,"コンパクトで住環境が整った住宅都市。",5,85,20,8,6],
+        ["府中市","市",102000,262000,"行政・商業機能が充実する多摩中核都市。",5,84,21,7,6],
+        ["小金井市","市",109000,126000,"公園が多く中央線沿線で人気。",6,86,22,6,6],
+        ["国分寺市","市",104000,129000,"複数路線が使える交通の利便性が魅力。",5,85,22,6,6],
+        ["国立市","市",107000,76000,"学園都市として落ち着いた街並み。",5,85,23,6,6],
+        ["立川市","市",103000,186000,"多摩地域最大級の商業集積がある。",5,84,22,7,7],
+        ["日野市","市",95000,189000,"多摩川沿いの住宅地で自然と都市機能が共存。",4,82,25,8,7],
+        ["八王子市","市",88000,560000,"広大な市域を持つ多摩西部の中心都市。",4,80,28,9,8],
+        ["町田市","市",97000,431000,"神奈川方面へのアクセスも良い大型住宅都市。",4,81,24,9,7],
+        ["多摩市","市",98000,148000,"ニュータウン開発で計画的な街区が多い。",4,82,23,8,7],
+        ["稲城市","市",99000,93000,"新興住宅地が増え、子育て世帯に人気。",4,83,24,8,7],
+        ["昭島市","市",90000,113000,"拝島エリアを中心に住宅供給が豊富。",4,80,26,9,8],
+        ["福生市","市",89000,56000,"基地周辺の国際色と住宅地が共存。",4,79,27,10,8],
+        ["羽村市","市",86000,55000,"工業と住宅がバランスよく立地。",3,78,29,10,8],
+        ["あきる野市","市",82000,79000,"秋川渓谷など自然資源が豊富。",3,77,31,11,9],
+        ["青梅市","市",81000,129000,"山間部を含み自然環境に恵まれる。",3,76,33,12,9],
+        ["日の出町","町",78000,17000,"丘陵地の住宅地と自然景観が魅力。",3,75,34,12,9],
+        ["瑞穂町","町",79000,32000,"物流拠点と住宅地が広がる。",3,76,32,11,9],
+        ["檜原村","村",73000,2000,"東京都唯一の村。山林比率が高い。",2,70,40,13,9],
+        ["奥多摩町","町",74000,4600,"湖と山岳観光で知られる自然豊かな町。",2,71,41,13,9],
+        ["清瀬市","市",92000,76000,"医療施設が多く落ち着いた住宅環境。",4,81,26,8,7],
+        ["東久留米市","市",94000,117000,"湧水地が点在し緑の多い住宅都市。",4,82,25,8,7],
+        ["西東京市","市",99000,206000,"都心通勤圏で人口が安定している。",4,83,24,7,6],
+        ["東村山市","市",91000,151000,"西武線沿線の住宅地として成熟。",4,80,27,8,7],
+        ["東大和市","市",90000,85000,"狭山丘陵に近く自然と住宅が共存。",4,79,27,9,7],
+        ["武蔵村山市","市",87000,71000,"モノレール延伸期待が高まるエリア。",3,78,29,9,8],
+        ["小平市","市",97000,198000,"学園都市として整備された住宅地。",4,82,24,7,7],
+        // islands
+        ["大島町","町",76000,7200,"伊豆大島の中心で観光と農漁業が基盤。",3,74,35,14,10],
+        ["利島村","村",72000,300,"椿栽培で知られる小規模離島。",2,68,45,15,10],
+        ["新島村","村",75000,2500,"サーフィン文化が根付く離島エリア。",3,72,37,14,10],
+        ["神津島村","村",74000,1900,"透明度の高い海と星空観光で有名。",2,71,39,14,10],
+        ["三宅村","村",73000,2400,"火山地形と漁業文化が特色。",2,70,42,15,10],
+        ["御蔵島村","村",71000,300,"イルカウォッチングで知られる離島。",2,67,46,16,10],
+        ["八丈町","町",77000,7100,"八丈島の中心で観光移住の需要もある。",3,73,36,14,10],
+        ["青ヶ島村","村",70000,160,"二重カルデラ地形が特徴的な孤島。",1,65,50,16,10],
+        ["小笠原村","村",79000,2900,"世界自然遺産を有する海洋性の村。",3,74,38,15,10]
+      ].map(([name,type,rent,pop,intro,station,access,green,disaster,cluster])=>({
+        name,type,rent,population:pop,intro,station,access,green,disaster,cluster
+      }));
+
+      const positions = {
+        2:[[580,120],[690,130],[800,130],[590,210],[700,220],[480,210],[870,220],[940,260],[1040,250],[800,300],[690,300],[920,360],[600,310],[500,300],[410,310],[770,220],[940,180],[1020,330],[310,310],[220,270],[1060,340],[1160,320],[1140,420]],
+        3:[[420,410],[500,410],[580,420],[650,430],[730,430],[560,500],[640,500],[720,500],[790,510],[870,520],[940,560],[850,610],[930,620],[1010,620],[330,480],[250,520],[170,550],[90,530],[50,470],[120,440],[200,430],[280,430],[350,430],[430,500],[500,500],[340,550]],
+        10:[[1060,660],[1130,710],[990,700],[1060,740],[1130,790],[1200,820],[1060,830],[1210,890],[1240,760]]
+      };
+
+      import * as THREE from "three";
+
+      function colorScale(v, min, max) {
+        const ratio = (v - min) / (max - min);
+        const t = Math.max(0, Math.min(1, ratio));
+        const stops = [
+          [0.00, new THREE.Color("#2356a8")],
+          [0.25, new THREE.Color("#3f9be0")],
+          [0.50, new THREE.Color("#57d29d")],
+          [0.75, new THREE.Color("#e3d25a")],
+          [1.00, new THREE.Color("#e55f5f")]
+        ];
+
+        let lower = stops[0];
+        let upper = stops[stops.length - 1];
+        for (let i = 0; i < stops.length - 1; i += 1) {
+          if (t >= stops[i][0] && t <= stops[i + 1][0]) {
+            lower = stops[i];
+            upper = stops[i + 1];
+            break;
+          }
+        }
+
+        const localT = (t - lower[0]) / (upper[0] - lower[0] || 1);
+        return `#${lower[1].clone().lerp(upper[1], localT).getHexString()}`;
+      }
+
+      const sorted = [...areas].sort((a,b)=>b.rent-a.rent);
+      const ranks = new Map(sorted.map((d,i)=>[d.name, i+1]));
+      const byCluster = new Map();
+      areas.forEach(a => {
+        if(!byCluster.has(a.cluster)) byCluster.set(a.cluster, []);
+        byCluster.get(a.cluster).push(a);
+      });
+
+      const minRent = Math.min(...areas.map(d=>d.rent));
+      const maxRent = Math.max(...areas.map(d=>d.rent));
+      const svg = document.getElementById("map");
+
+      [2,3,10].forEach(cluster => {
+        (byCluster.get(cluster)||[]).forEach((a, idx) => {
+          const [x,y] = positions[cluster][idx] || [20 + idx * 90, 40 + cluster*40];
+          const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+          const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+          rect.setAttribute("x",x); rect.setAttribute("y",y);
+          rect.setAttribute("width",72); rect.setAttribute("height",52);
+          rect.setAttribute("fill", colorScale(a.rent,minRent,maxRent));
+          rect.setAttribute("class","tile");
+
+          const txt = document.createElementNS("http://www.w3.org/2000/svg","text");
+          txt.setAttribute("x", x + 36); txt.setAttribute("y", y + 30); txt.setAttribute("class","label");
+          txt.textContent = a.name.replace(/(市|区|町|村)$/,'');
+
+          rect.addEventListener("mouseenter", ()=> showDetails(a));
+          rect.addEventListener("focus", ()=> showDetails(a));
+          g.append(rect, txt); svg.append(g);
+        });
+      });
+
+      function showDetails(d) {
+        document.getElementById("selName").textContent = d.name;
+        document.getElementById("selType").textContent = `${d.type} / 平均賃料 ${d.rent.toLocaleString()}円`;
+
+        const peers = sorted.slice(0, 10).map(v => `<li>${ranks.get(v.name)}位 ${v.name} - ${v.rent.toLocaleString()}円</li>`).join("");
+        document.getElementById("details").innerHTML = `
+          <div class="row"><span class="muted">都内賃料ランキング</span><strong>${ranks.get(d.name)}位 / ${areas.length}</strong></div>
+          <div class="row"><span class="muted">人口（概算）</span><strong>${d.population.toLocaleString()}人</strong></div>
+          <div class="row"><span class="muted">駅アクセス指数</span><strong>${d.access}/100</strong></div>
+          <div class="row"><span class="muted">駅数目安</span><strong>${d.station}駅</strong></div>
+          <div class="row"><span class="muted">緑地率イメージ</span><strong>${d.green}%</strong></div>
+          <div class="row"><span class="muted">防災余力スコア</span><strong>${d.disaster}/10</strong></div>
+          <p style="line-height:1.6; margin-top:10px;">${d.intro}</p>
+          <hr style="border:0;border-top:1px solid #233866; margin:12px 0;" />
+          <div class="muted">賃料上位10エリア</div>
+          <ol class="top5">${peers}</ol>
+          <p class="muted">※ 指標値はデモ用の整理値です。実運用時は不動産データAPIや統計CSVに差し替えてください。</p>
+        `;
+      }
+    </script>
+  </body>
+</html>
