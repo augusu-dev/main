@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aurora Dash - Mini Platformer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="hud">
+        <div>
+          <h1>Aurora Dash</h1>
+          <p>
+            3分でゴールできる、爽快ミニ・プラットフォーマー！<br />
+            矢印キー or A/Dで移動、Space/↑でジャンプ、Shiftでダッシュ。
+          </p>
+        </div>
+        <div class="controls">
+          <label class="upload">
+            キャラクター画像をアップロード
+            <input id="avatarUpload" type="file" accept="image/*" />
+          </label>
+          <div class="stats">
+            <span>タイム: <strong id="time">0.0</strong>s</span>
+            <span>残り時: <strong id="timeLeft">180</strong>s</span>
+            <span>コア: <strong id="orbs">0</strong>/<span id="totalOrbs">0</span></span>
+            <span>残りライフ: <strong id="lives">3</strong></span>
+          </div>
+        </div>
+      </section>
+      <section class="game-card">
+        <canvas id="game" width="960" height="540" aria-label="Aurora Dash game"></canvas>
+        <div class="message" id="message"></div>
+      </section>
+      <section class="tips">
+        <h2>クリアのコツ</h2>
+        <ul>
+          <li>ダッシュは空中でも使えます。長い谷を渡るときに活用！</li>
+          <li>緑のスプリングは高く跳べます。</li>
+          <li>3分以内にゴールできる長さに調整済み。落ち着いて進めばOK。</li>
+        </ul>
+      </section>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
