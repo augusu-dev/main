@@ -1,34 +1,40 @@
-# アウグスのメイン実験室
+# 全国家賃ヒートマップ (Next.js + Supabase)
 
-## 東京都 市区町村別 平均賃貸マップ
+Next.js 14 (App Router) + Supabase を使った、市区町村別の家賃ヒートマップ/掲示板アプリの実装土台です。
 
-東京都の全53市区町村（本土部）の平均賃貸価格を色分けで可視化するインタラクティブマップです。
-
-### 機能
-
-- 市区町村を家賃水準で色分け表示（Leaflet.js ベース）
-- ホバー時にツールチップで市区町村名・家賃・ランキングを表示
-- クリックでサイドバーに詳細情報を表示:
-  - 家賃ランキング
-  - エリア紹介文
-  - 人口・面積・人口密度
-  - 主要駅
-  - 見どころ
-- サイドバーはスクロール対応
-- ダークテーマのモダンUI
-
-### 使い方
-
-`index.html` をブラウザで開くだけで動作します（外部CDNからLeaflet.jsを読み込みます）。
-
-ビルドスクリプトでHTMLを再生成する場合:
+## セットアップ
 
 ```bash
-python3 build.py
+npm install
+npm run dev
 ```
 
-### データ
+`.env.example` を `.env.local` にコピーして環境変数を設定してください。
 
-- 地図データ: [国土数値情報](https://nlftp.mlit.go.jp/ksj/) 行政区域データ
-- 家賃データ: 2024年時点の1K/1DK平均賃貸（概算）
-- 人口データ: 2024年時点の推計値
+## Supabase 手動セットアップ
+
+1. Supabase で新規プロジェクト作成
+2. `supabase/schema.sql` を SQL Editor で実行
+3. Authentication で Email/Password を有効化
+4. Vercel 側に以下の環境変数を登録
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ESTAT_API_KEY`
+
+## データパイプライン
+
+- 市区町村 GeoJSON 取得: `python3 scripts/fetch_geojson.py`
+- e-Stat 家賃データ取得: `python3 scripts/fetch_rent_data.py --api-key <ESTAT_API_KEY>`
+- Supabase 取り込み: `python3 scripts/import_to_supabase.py`
+
+## 主要ページ
+
+- `/` 全国地図 + サイドバー + 検索
+- `/[city_code]` 市区町村詳細
+- `/board/[city_code]` ログイン必須掲示板（Realtime 更新）
+- `/auth` ログイン / 登録
+
+## 既存ポータル
+
+`index.html` は AUGUSU LAB ポータルとして残し、新しい Next.js アプリへの導線を追加しています。
