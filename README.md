@@ -34,7 +34,27 @@ npm run dev
 - `/[city_code]` 市区町村詳細
 - `/board/[city_code]` ログイン必須掲示板（Realtime 更新）
 - `/auth` ログイン / 登録
+codex/create-implementation-plan-for-next.js-project
 
 ## 既存ポータル
 
 `index.html` は AUGUSU LAB ポータルとして残し、新しい Next.js アプリへの導線を追加しています。
+
+### Vercel デプロイ時の注意
+
+`vercel.json` では `@secret_name` 形式の参照を使っていません。  
+Vercel Dashboard の **Project Settings → Environment Variables** に、次のキーを直接登録してください。
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ESTAT_API_KEY`
+
+> もし `Environment Variable "NEXT_PUBLIC_SUPABASE_URL" references Secret "next_public_supabase_url" ...` のエラーが出る場合は、
+> 以前の `vercel.json` / ダッシュボード設定で `@next_public_supabase_url` 参照が残っている可能性があります。
+> 参照を削除して、値を直接設定し直してください。
+
+## 既存ポータル
+
+`index.html` は AUGUSU LAB ポータルとして残し、新しい Next.js アプリへの導線を追加しています。
+claude/tokyo-tintai-map

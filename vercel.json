@@ -1,6 +1,9 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
+codex/create-implementation-plan-for-next.js-project
+  "installCommand": "npm install"
+
   "installCommand": "npm install",
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
@@ -8,4 +11,5 @@
     "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
     "ESTAT_API_KEY": "@estat_api_key"
   }
+claude/tokyo-tintai-map
 }
