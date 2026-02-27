@@ -34,6 +34,7 @@ npm run dev
 - `/[city_code]` 市区町村詳細
 - `/board/[city_code]` ログイン必須掲示板（Realtime 更新）
 - `/auth` ログイン / 登録
+codex/create-implementation-plan-for-next.js-project
 
 ## 既存ポータル
 
@@ -52,3 +53,8 @@ Vercel Dashboard の **Project Settings → Environment Variables** に、次の
 > もし `Environment Variable "NEXT_PUBLIC_SUPABASE_URL" references Secret "next_public_supabase_url" ...` のエラーが出る場合は、
 > 以前の `vercel.json` / ダッシュボード設定で `@next_public_supabase_url` 参照が残っている可能性があります。
 > 参照を削除して、値を直接設定し直してください。
+
+## 既存ポータル
+
+`index.html` は AUGUSU LAB ポータルとして残し、新しい Next.js アプリへの導線を追加しています。
+claude/tokyo-tintai-map
