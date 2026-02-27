@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  color: #111827;
+  background: #f9fafb;
+}
+
+.map-pane {
+  height: calc(100vh - 6rem);
+}

@@ -16,18 +16,9 @@
     align-items: center;
     padding: 60px 24px;
   }
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 8px;
-  }
+  h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 8px; }
   h1 span { color: #6c8cff; }
-  .subtitle {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 48px;
-  }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 48px; }
   .projects {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -42,13 +33,9 @@
     padding: 24px;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.3s, transform 0.2s, box-shadow 0.3s;
   }
-  .project-card:hover {
-    border-color: rgba(100, 140, 255, 0.5);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 30px rgba(108, 140, 255, 0.15);
-  }
+  .project-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .project-desc { font-size: 13px; color: #888; line-height: 1.6; }
   .project-tag {
     display: inline-block;
     font-size: 10px;
@@ -59,25 +46,8 @@
     padding: 2px 8px;
     border-radius: 10px;
     margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
-  .project-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 8px;
-  }
-  .project-desc {
-    font-size: 13px;
-    color: #888;
-    line-height: 1.6;
-  }
-  footer {
-    margin-top: 60px;
-    font-size: 12px;
-    color: #444;
-  }
+  footer { margin-top: 60px; font-size: 12px; color: #444; }
 </style>
 </head>
 <body>
@@ -86,12 +56,17 @@
 
   <div class="projects">
     <a href="tokyo-rental-map/" class="project-card">
-      <div class="project-tag">Map / Data Viz</div>
+      <div class="project-tag">Legacy</div>
       <div class="project-title">東京都 市区町村別 平均賃貸マップ</div>
-      <div class="project-desc">東京都53市区町村の平均賃貸価格をインタラクティブマップで可視化。ホバーでランキング、クリックで詳細情報を表示。</div>
+      <div class="project-desc">従来の東京都53市区町村マップ（静的HTML版）。</div>
+    </a>
+    <a href="https://YOUR-VERCEL-APP.vercel.app" class="project-card">
+      <div class="project-tag">Next.js 14 / Supabase</div>
+      <div class="project-title">全国家賃ヒートマップ（新）</div>
+      <div class="project-desc">全市区町村ポリゴン、e-Stat家賃データ、ログイン必須掲示板を実装する新ポータル。</div>
     </a>
   </div>
 
-  <footer>&copy; 2025 Augusu Lab</footer>
+  <footer>&copy; 2026 Augusu Lab</footer>
 </body>
 </html>
